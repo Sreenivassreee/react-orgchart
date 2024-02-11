@@ -15,7 +15,7 @@ export default async function handler(
         const employees = await Employee.find();
         console.log(employees, "---employees");
         res.status(200).json(employees);
-      } catch (error) {
+      } catch ({ error }: any) {
         res.status(500).json({ message: error.message });
       }
       break;
@@ -25,7 +25,7 @@ export default async function handler(
         const newEmployee = new Employee(employee);
         await newEmployee.save();
         res.status(201).json(newEmployee);
-      } catch (error) {
+      } catch ({ error }: any) {
         res.status(400).json({ message: error.message });
       }
       break;

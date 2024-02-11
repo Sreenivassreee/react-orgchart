@@ -1,127 +1,200 @@
 "use client";
-import React, { useState } from "react";
-import * as go from "gojs";
-import DiagramWrapper from "./components/Diagram";
+import React, { useEffect, useState } from "react";
+import * as d3 from "d3";
+import { OrgChart } from "d3-org-chart";
+// import "d3-org-chart/dist/style.min.css";
+import axios from "axios";
+import { IEmployee } from "@/models/Employee";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
 
-interface NodeData {
-  key: number;
-  text: string;
-  color: string;
-  loc: string;
-}
+// const data = [
+//   {
+//     name: "Sree",
+//     imageUrl:
+//       "https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/cto.jpg",
+//     area: "Corporate",
+//     profileUrl: "http://example.com/employee/profile",
+//     office: "CTO office",
+//     tags: "Ceo,tag1,manager,cto",
+//     isLoggedUser: "false",
+//     positionName: "Chief Executive Officer",
+//     id: "O-6066",
+//     parentId: "",
+//     size: "",
+//   },
+//   {
+//     name: "Sree",
+//     imageUrl:
+//       "https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/cto.jpg",
+//     area: "Corporate",
+//     profileUrl: "http://example.com/employee/profile",
+//     office: "CTO office",
+//     tags: "Ceo,tag1,manager,cto",
+//     isLoggedUser: "false",
+//     positionName: "Chief Executive Officer",
+//     id: "O-6065",
+//     parentId: "O-6066",
+//     size: "",
+//   },
+// ];
 
-interface LinkData {
-  key: number;
-  from: number;
-  to: number;
-}
+// const Home = () => {
+//   axios
+//     .post("api/employees", {
+//       name: "Sree",
+//       imageUrl:
+//         "https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/cto.jpg",
+//       area: "Corporate",
+//       profileUrl: "http://example.com/employee/profile",
+//       office: "CTO office",
+//       tags: "Ceo,tag1,manager,cto",
+//       isLoggedUser: "false",
+//       positionName: "Chief Executive Officer",
+//       id: "O-6066",
+//       parentId: "",
+//       size: "",
+//     })
+//     .then((x) => {
+//       console.log(x);
+//     });
+// };
 
-interface ModelData {
-  canRelink: boolean;
-}
+const Home = () => {
+  const [allData, setAllData] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedPersonData, setSelectedPersonData] = useState<
+    IEmployee | undefined
+  >();
+  const [selectedId, setSelectedId] = useState();
 
-const Home: React.FC = () => {
-  const [state, setState] = useState<{
-    nodeDataArray: NodeData[];
-    linkDataArray: LinkData[];
-    modelData: ModelData;
-    selectedKey: number | null;
-    skipsDiagramUpdate: boolean;
-  }>({
-    nodeDataArray: [
-      { key: 0, text: "Alpha", color: "lightblue", loc: "0 0" },
-      { key: 1, text: "Beta", color: "orange", loc: "150 0" },
-      { key: 2, text: "Gamma", color: "lightgreen", loc: "0 150" },
-      { key: 3, text: "Delta", color: "pink", loc: "150 150" },
-    ],
-    linkDataArray: [
-      { key: -1, from: 0, to: 1 },
-      { key: -2, from: 0, to: 2 },
-      { key: -3, from: 1, to: 1 },
-      { key: -4, from: 2, to: 3 },
-      { key: -5, from: 3, to: 0 },
-    ],
-    modelData: {
-      canRelink: true,
-    },
-    selectedKey: null,
-    skipsDiagramUpdate: false,
-  });
+  useEffect(() => {
+    console.log("-----------------------");
+    let chart: any;
+    axios.get("api/employees").then((response) => {
+      const tempData = response.data;
+      chart = new OrgChart()
+        .container(".chart-container")
+        .data(tempData)
+        .nodeWidth((d: any) => 250)
+        .initialZoom(0.7)
+        .nodeHeight((d: any) => 175)
+        .childrenMargin((d: any) => 40)
+        .compactMarginBetween((d: any) => 15)
+        .compactMarginPair((d: any) => 80)
+        .nodeContent(function (d: any, i: number, arr: any, state: any) {
+          (window as any).handleChartClick = (tData: any) => {
+            setSelectedId(tData);
+          };
 
-  const handleDiagramEvent = (e: go.DiagramEvent) => {
-    const name = e.name;
-    switch (name) {
-      case "ChangedSelection": {
-        const sel = e.subject.first();
-        if (sel) {
-          setState((prevState) => ({ ...prevState, selectedKey: sel.key }));
-        } else {
-          setState((prevState) => ({ ...prevState, selectedKey: null }));
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  };
+          return `
+            <div id="person-card" value=${
+              d.data.id
+            } onclick="handleChartClick('${d.data.id}')" style="padding-top:30px;background-color:none;margin-left:1px;height:${d.height}px;border-radius:2px;overflow:visible">
+              <div style="height:${
+                d.height - 32
+              }px;padding-top:0px;background-color:white;border:1px solid lightgray;">
 
-  const handleModelChange = (obj: go.IncrementalData) => {
-    const {
-      insertedNodeKeys,
-      modifiedNodeData,
-      removedNodeKeys,
-      insertedLinkKeys,
-      modifiedLinkData,
-      removedLinkKeys,
-    } = obj;
-    console.log(
-      insertedNodeKeys,
-      modifiedNodeData,
-      removedNodeKeys,
-      insertedLinkKeys,
-      modifiedLinkData,
-      removedLinkKeys
-      // modifiedModelData
+                <img src=" ${
+                  d.data.imageUrl
+                }" style="margin-top:-30px;margin-left:${d.width / 2 - 30}px;border-radius:100px;width:60px;height:60px;" />
+               <div  style="margin-right:10px;margin-top:15px;float:right">${
+                 d.data.id
+               }</div>
+               
+               <div style="margin-top:-30px;background-color:#3AB6E3;height:10px;width:${
+                 d.width - 2
+               }px;border-radius:1px"></div>
+
+               <div style="padding:20px; padding-top:35px;text-align:center">
+                   <div style="color:#111672;font-size:16px;font-weight:bold"> ${
+                     d.data.name
+                   } </div>
+                   <div style="color:#404040;font-size:16px;margin-top:4px"> ${
+                     d.data.positionName
+                   } </div>
+               </div> 
+               <div style="display:flex;justify-content:space-between;padding-left:15px;padding-right:15px;">
+                 <div > Manages:  ${d.data._directSubordinates} 👤</div>  
+                 <div > Oversees: ${d.data._totalSubordinates} 👤</div>    
+               </div>
+              </div>    
+      
+      </div>
+      
+  `;
+        })
+        .render();
+      setAllData(tempData);
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log(selectedId);
+    const personData = allData?.find(
+      (person: IEmployee) => person.id === selectedId
     );
-    // see gojs-react-basic for an example model change handler
-    // when setting state, be sure to set skipsDiagramUpdate: true since GoJS already has this update
-  };
 
-  const handleRelinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.checked;
-    setState((prevState) => ({
-      ...prevState,
-      modelData: { canRelink: value },
-      skipsDiagramUpdate: false,
-    }));
-  };
+    setSelectedPersonData(personData);
+    setIsOpen(true);
+  }, [selectedId, allData]);
 
-  let selKey;
-  if (state.selectedKey !== null) {
-    selKey = <p>Selected key: {state.selectedKey}</p>;
-  }
+  // const clickedOnCard = (id: any) => {
+  //   // console.log(id);
+  //   setIsOpen(true);
+
+  //   const personData = [
+  //     ...(allData?.find((person: IEmployee) => person.id === id) ?? []),
+  //   ];
+  //   console.log(personData, "-----personData-----");
+
+  // };
 
   return (
-    <div>
-      <DiagramWrapper
-        nodeDataArray={state.nodeDataArray}
-        linkDataArray={state.linkDataArray}
-        modelData={state.modelData}
-        skipsDiagramUpdate={state.skipsDiagramUpdate}
-        onDiagramEvent={handleDiagramEvent}
-        onModelChange={handleModelChange}
-      />
-      <label>
-        Allow Relinking?
-        <input
-          type="checkbox"
-          id="relink"
-          checked={state.modelData.canRelink}
-          onChange={handleRelinkChange}
-        />
-      </label>
-      {selKey}
-    </div>
+    <>
+      <div
+        // onClick={(e) => clickedOnCard(e)}
+        className="chart-container"
+        style={{ height: "1200px", backgroundColor: "#f6f6f6" }}
+      ></div>
+      <Drawer open={isOpen} onClose={() => setIsOpen(false)}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{selectedPersonData?.name}</DrawerTitle>
+            <DrawerDescription>This action cannot be undone.</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter>
+            <Button
+              onClick={() => {
+                setSelectedPersonData(undefined);
+                setIsOpen(false);
+              }}
+            >
+              Submit
+            </Button>
+
+            <Button
+              onClick={() => {
+                setSelectedPersonData(undefined);
+                setIsOpen(false);
+              }}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
 
