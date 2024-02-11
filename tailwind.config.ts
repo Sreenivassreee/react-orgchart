@@ -1,20 +1,13 @@
-import type { Config } from "tailwindcss";
+// tailwind.config.js
 
-const config: Config = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  theme: {
-    extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
-    },
+module.exports = {
+  purge: {
+    content: [
+      "./src/**/*.html",
+      "./src/**/*.js",
+      "./src/**/*.jsx",
+      // Add more file paths or content patterns as needed
+    ],
   },
-  plugins: [],
+  // Other Tailwind CSS configuration options...
 };
-export default config;
