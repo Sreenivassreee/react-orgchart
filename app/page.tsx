@@ -16,6 +16,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { CustomForm } from "../components/own/form";
 
 // const data = [
 //   {
@@ -94,6 +95,7 @@ const Home = () => {
         .nodeContent(function (d: any, i: number, arr: any, state: any) {
           (window as any).handleChartClick = (tData: any) => {
             setSelectedId(tData);
+            setIsOpen(true);
           };
 
           return `
@@ -145,7 +147,6 @@ const Home = () => {
     );
 
     setSelectedPersonData(personData);
-    setIsOpen(true);
   }, [selectedId, allData]);
 
   // const clickedOnCard = (id: any) => {
@@ -170,27 +171,26 @@ const Home = () => {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{selectedPersonData?.name}</DrawerTitle>
-            <DrawerDescription>This action cannot be undone.</DrawerDescription>
+            <CustomForm
+              selectedPersonData={selectedPersonData}
+              oonClose={() => {
+                setSelectedPersonData(undefined);
+                setIsOpen(false);
+              }}
+              oonSubmit={(data: any) => {
+                console.log("dtat", data);
+              }}
+            />
           </DrawerHeader>
           <DrawerFooter>
-            <Button
+            {/* <Button
               onClick={() => {
                 setSelectedPersonData(undefined);
                 setIsOpen(false);
               }}
             >
               Submit
-            </Button>
-
-            <Button
-              onClick={() => {
-                setSelectedPersonData(undefined);
-                setIsOpen(false);
-              }}
-              variant="outline"
-            >
-              Cancel
-            </Button>
+            </Button> */}
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
